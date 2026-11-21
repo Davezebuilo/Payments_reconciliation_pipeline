@@ -1,0 +1,17 @@
+services:
+  warehouse:
+    image: postgres:17
+    container_name: recon-warehouse
+    env_file: .env
+    ports:
+      - "${WAREHOUSE_PORT:-5433}:5432"   # your Mac's 5433 → the container's 5432
+    volumes:
+      - warehouse-data:/var/lib/postgresql/data   # data survives restarts
+      - ./warehouse/init:/docker-entrypoint-initdb.d:ro   # runs on first start only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  warehouse-data:

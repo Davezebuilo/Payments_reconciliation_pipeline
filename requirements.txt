@@ -1,0 +1,6 @@
+pandas
+faker
+numpy
+psycopg[binary]
+python-dotenv
+pytest
