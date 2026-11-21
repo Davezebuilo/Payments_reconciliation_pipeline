@@ -1,5 +1,8 @@
 include .env
 
+START ?= 2026-10-01
+DAYS ?= 30
+
 up:      ## start the warehouse
 	docker compose up -d --wait
 
@@ -15,4 +18,10 @@ logs:
 psql:    ## open a SQL shell inside the container
 	docker compose exec warehouse psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
-.PHONY: up down reset logs psql
+data:    ## generate synthetic data into data/
+	.venv/bin/python -m generator.generate --start $(START) --days $(DAYS)
+
+test:
+	.venv/bin/python -m pytest -q
+
+.PHONY: up down reset logs psql data test

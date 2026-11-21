@@ -4,3 +4,4 @@ numpy
 psycopg[binary]
 python-dotenv
 pytest
+pyyaml

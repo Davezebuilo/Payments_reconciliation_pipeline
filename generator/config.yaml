@@ -1,0 +1,42 @@
+# Settings for the synthetic data. Change these to make more data or more errors.
+seed: 22                      # same seed = same data every run
+transactions_per_day: 50000
+
+statuses:                     # share of ledger transactions (must add up to 1)
+  successful: 0.95
+  failed: 0.04
+  pending: 0.01
+
+channels:                     # how customers paid (must add up to 1)
+  card: 0.45
+  transfer: 0.30
+  ussd: 0.15
+  wallet: 0.10
+
+billers:                      # fictional billers; min and max are in naira
+  - {code: IKP, name: Ikeja Power, product: electricity, min: 1000, max: 50000}
+  - {code: EKG, name: Eko Grid, product: electricity, min: 1000, max: 50000}
+  - {code: ABE, name: Abuja Energy, product: electricity, min: 1000, max: 30000}
+  - {code: TL1, name: TeleOne, product: airtime, min: 100, max: 10000}
+  - {code: ANT, name: AirNet, product: airtime, min: 100, max: 10000}
+  - {code: GWV, name: GloWave, product: data, min: 500, max: 20000}
+
+fee:                          # convenience fee charged to the customer
+  percent: 0.01
+  cap: 100                    # naira
+processor_charge:             # what the processor keeps from each settlement
+  percent: 0.015
+  cap: 2000                   # naira
+
+anomalies:                    # share of successful transactions that get each error
+  missing_settlement: 0.005   # paid, but the processor never settled it
+  missing_vend: 0.004         # paid and settled, but no token was vended (refund needed)
+  vend_failed: 0.003          # the biller tried to vend and failed
+  amount_mismatch: 0.002      # processor settled a different amount
+  fee_mismatch: 0.002         # processor reports a different fee
+  duplicate_settlement: 0.001 # processor settled it twice
+  duplicate_vend: 0.001       # biller vended twice
+  late_settlement: 0.02       # settled T+2 to T+5 instead of T+1 (late, not lost)
+  missing_reference: 0.003    # processor row has no merchant reference
+  status_mismatch: 0.02       # share of FAILED transactions the processor settled anyway
+  orphan_vend: 0.0005         # vends for transactions the ledger never had
