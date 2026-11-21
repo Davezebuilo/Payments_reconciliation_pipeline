@@ -39,4 +39,5 @@ anomalies:                    # share of successful transactions that get each e
   late_settlement: 0.02       # settled T+2 to T+5 instead of T+1 (late, not lost)
   missing_reference: 0.003    # processor row has no merchant reference
   status_mismatch: 0.02       # share of FAILED transactions the processor settled anyway
-  orphan_vend: 0.0005         # vends for transactions the ledger never had
+  orphan_vend: 0.0005
+  wrong_biller: 0.001         # where the vend shows a different biller code than the ledger

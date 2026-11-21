@@ -24,4 +24,10 @@ data:    ## generate synthetic data into data/
 test:
 	.venv/bin/python -m pytest -q
 
-.PHONY: up down reset logs psql data test
+load:      ## load every day in data/landing into raw
+	.venv/bin/python -m loader.load --all
+
+load-day:  ## reload one day: make load-day DATE=2026-10-02
+	.venv/bin/python -m loader.load --date $(DATE)
+
+.PHONY: up down reset logs psql data test load load-day

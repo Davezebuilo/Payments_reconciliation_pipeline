@@ -33,6 +33,7 @@ PER_TRANSACTION = [
     "duplicate_vend",
     "late_settlement",
     "missing_reference",
+    "wrong_biller",
 ]
 
 
@@ -131,6 +132,12 @@ def inject_anomalies(
     i = picks["vend_failed"]
     vends.loc[i, "vend_status"] = "failed"
     vends.loc[i, "token"] = ""
+
+    i = picks["wrong_biller"]
+    codes = [b["code"] for b in cfg["billers"]]
+    # Shift each code to the next biller in the list (the last wraps to the first), so it always differs.
+    next_code = dict(zip(codes, codes[1:] + codes[:1]))
+    vends.loc[i, "biller_code"] = vends.loc[i, "biller_code"].map(next_code)
 
     i = picks["amount_mismatch"]
     delta = rng.choice([-1, 1], len(i)) * rng.integers(1, 11, len(i)) * 50

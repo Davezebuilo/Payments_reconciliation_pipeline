@@ -68,3 +68,10 @@ def test_clean_transactions_match_exactly_once(data):
     vended = vends["client_reference"].value_counts()
     assert (settled.reindex(list(clean)) == 1).all()
     assert (vended.reindex(list(clean)) == 1).all()
+
+def test_wrong_biller_vends_show_a_different_biller(data):
+    ledger, _, vends, truth = data
+    wrong = list(refs(truth, "wrong_biller"))
+    in_ledger = ledger.set_index("merchant_ref").loc[wrong, "biller_code"]
+    in_vends = vends.set_index("client_reference").loc[wrong, "biller_code"]
+    assert wrong and (in_ledger != in_vends).all()
