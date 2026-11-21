@@ -1,0 +1,69 @@
+version: 2
+
+# Tests here describe what is always true of clean data. Things the reconciliation is meant
+# to find (duplicate settlements, missing references) are NOT tested here: they're findings,
+# not failures.
+
+models:
+  - name: stg_ledger
+    description: One row per payment attempt, typed. Money in kobo.
+    columns:
+      - name: merchant_ref
+        description: Our reference for the payment; the key every source should share.
+        data_tests: [unique, not_null]
+      - name: biller_code
+        data_tests:
+          - accepted_values:
+              arguments: {values: [IKP, EKG, ABE, TL1, ANT, GWV]}
+      - name: product
+        data_tests:
+          - accepted_values:
+              arguments: {values: [electricity, airtime, data]}
+      - name: channel
+        data_tests:
+          - accepted_values:
+              arguments: {values: [card, transfer, ussd, wallet]}
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments: {values: [successful, failed, pending]}
+      - name: amount_kobo
+        data_tests: [not_null]
+      - name: created_at
+        data_tests: [not_null]
+
+  - name: stg_processor_settlement
+    description: One row per settlement line. May contain duplicates and missing references.
+    columns:
+      - name: processor_ref
+        data_tests: [unique, not_null]
+      - name: merchant_ref
+        description: Null when the processor sent no reference; matched another way later.
+      - name: txn_date
+        data_tests: [not_null]
+      - name: settlement_date
+        data_tests: [not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments: {values: [settled]}
+      - name: amount_kobo
+        data_tests: [not_null]
+
+  - name: stg_biller_vends
+    description: One row per vend. May contain duplicates and vends we never sold.
+    columns:
+      - name: vend_ref
+        data_tests: [unique, not_null]
+      - name: biller_code
+        data_tests:
+          - accepted_values:
+              arguments: {values: [IKP, EKG, ABE, TL1, ANT, GWV]}
+      - name: vend_status
+        data_tests:
+          - accepted_values:
+              arguments: {values: [success, failed]}
+      - name: amount_kobo
+        data_tests: [not_null]
+      - name: vended_at
+        data_tests: [not_null]

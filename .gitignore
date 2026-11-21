@@ -4,3 +4,6 @@ __pycache__/
 .pytest_cache/
 data/
 .DS_Store
+dbt/recon/target/
+dbt/recon/logs/
+dbt/recon/dbt_packages/

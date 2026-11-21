@@ -1,7 +1,10 @@
 include .env
+export
 
 START ?= 2026-10-01
 DAYS ?= 30
+
+DBT = cd dbt/recon && DBT_PROFILES_DIR=. ../../.venv/bin/dbt
 
 up:      ## start the warehouse
 	docker compose up -d --wait
@@ -30,4 +33,17 @@ load:      ## load every day in data/landing into raw
 load-day:  ## reload one day: make load-day DATE=2026-10-02
 	.venv/bin/python -m loader.load --date $(DATE)
 
-.PHONY: up down reset logs psql data test load load-day
+dbt-debug:  ## check dbt can reach the warehouse
+	$(DBT) debug
+
+build:      ## run every model and test
+	$(DBT) build
+
+freshness:  ## warn if a source stopped arriving
+	$(DBT) source freshness
+
+docs:       ## browse the models and lineage at http://localhost:8080
+	$(DBT) docs generate
+	$(DBT) docs serve --port 8080
+
+.PHONY: up down reset logs psql data test load load-day dbt-debug build freshness docs

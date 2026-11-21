@@ -1,0 +1,15 @@
+name: recon
+version: "1.0.0"
+profile: recon
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  recon:
+    staging:
+      +schema: staging          # → the "staging" schema (see macros/generate_schema_name.sql)
+      +materialized: view       # staging is a thin cleaning layer; views always show the latest raw data

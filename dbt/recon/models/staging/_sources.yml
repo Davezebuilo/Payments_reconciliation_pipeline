@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Files exactly as they arrived, loaded by loader/load.py. Every column is text.
+    schema: raw
+    loaded_at_field: _loaded_at
+    freshness:                      # `dbt source freshness` warns if a source stops arriving
+      warn_after: {count: 1, period: day}
+      error_after: {count: 3, period: day}
+    tables:
+      - name: ledger
+        description: The platform's own record of every payment attempt.
+      - name: processor_settlement
+        description: What the payment processor settled, usually the day after (T+1).
+      - name: biller_vends
+        description: What the biller actually vended.

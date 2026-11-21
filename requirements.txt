@@ -5,3 +5,5 @@ psycopg[binary]
 python-dotenv
 pytest
 pyyaml
+dbt-core~=1.11.0
+dbt-postgres~=1.9.0
