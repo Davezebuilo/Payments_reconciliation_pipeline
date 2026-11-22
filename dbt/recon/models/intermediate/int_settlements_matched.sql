@@ -4,12 +4,27 @@
 -- unsettled payments sharing those values: then every one of those payments was settled,
 -- and since their amounts are identical, which row pairs with which doesn't matter.
 -- Anything more ambiguous stays unmatched: a wrong match is worse than none.
+{{ config(
+    materialized='incremental',
+    incremental_strategy='delete+insert',
+    unique_key='processor_ref',
+    indexes=[{'columns': ['processor_ref']}, {'columns': ['merchant_ref']}, {'columns': ['txn_date']}],
+) }}
+
+{#- On incremental runs, redo only the last few days. Matching works day by day, and every
+    settlement shares its payment's date, so a window of whole days never splits a match. -#}
+{% set recent -%}
+    {% if is_incremental() %}>= (select coalesce(max(txn_date) - {{ var('lookback_days') }}, '-infinity') from {{ this }}){% else %}is not null{% endif %}
+{%- endset %}
+
 with settlements as (
     select * from {{ ref('stg_processor_settlement') }}
+    where txn_date {{ recent }}
 ),
 
 ledger as (
     select * from {{ ref('stg_ledger') }}
+    where business_date {{ recent }}
 ),
 
 referenced as (

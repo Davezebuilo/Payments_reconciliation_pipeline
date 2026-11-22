@@ -1,11 +1,24 @@
 -- One row per transaction reference, from the ledger or from the biller, with one verdict.
 -- Each check runs in order and the first that fails decides the status, so the most
 -- serious problem (money moved wrongly) wins over the milder ones (paperwork, timing).
+{{ config(
+    materialized='incremental',
+    incremental_strategy='delete+insert',
+    unique_key='merchant_ref',
+    indexes=[{'columns': ['merchant_ref']}, {'columns': ['business_date']}],
+) }}
+
+{#- On incremental runs, redo only the last few days: late settlements can still change them. -#}
+{% set recent -%}
+    {% if is_incremental() %}>= (select coalesce(max(business_date) - {{ var('lookback_days') }}, '-infinity') from {{ this }}){% else %}is not null{% endif %}
+{%- endset %}
+
 with unmatched_settlements as (
     -- (date, amount, fee) of settlement rows we couldn't tie to one payment.
     select distinct txn_date, amount_kobo, fee_kobo
     from {{ ref('int_settlements_matched') }}
     where match_method = 'unmatched'
+    and txn_date {{ recent }}
 ),
 
 ledger as (
@@ -17,6 +30,7 @@ ledger as (
       on u.txn_date = l.business_date
      and u.amount_kobo = l.amount_kobo
      and u.fee_kobo = l.fee_kobo
+     where l.business_date {{ recent }}
 ),
 
 settlements as (
@@ -32,6 +46,7 @@ settlements as (
         max(settlement_lag_days)                    as settlement_lag_days
     from {{ ref('int_settlements_matched') }}
     where merchant_ref is not null
+    and txn_date {{ recent }}
     group by merchant_ref
 ),
 
@@ -45,6 +60,7 @@ vends as (
         min(vend_date)                              as vend_date
     from {{ ref('stg_biller_vends') }}
     where merchant_ref is not null
+    and vend_date {{ recent }}   -- a vend never happens before its payment
     group by merchant_ref
 ),
 
@@ -72,6 +88,10 @@ joined as (
     from ledger l
     left join settlements s using (merchant_ref)
     full outer join vends v on v.merchant_ref = l.merchant_ref
+    -- A vend just after midnight can belong to a payment from the day before the window.
+    -- That's not an orphan: keep only vends whose payment the ledger has never seen.
+    where l.merchant_ref is not null
+       or not exists (select 1 from {{ ref('stg_ledger') }} x where x.merchant_ref = v.merchant_ref)
 )
 
 select

@@ -1,6 +1,13 @@
 -- One row per vend the biller reports. Amounts already arrive in kobo; times arrive in UTC.
+{{ config(indexes=[{'columns': ['merchant_ref']}, {'columns': ['vend_date']}]) }}
+
 with source as (
     select * from {{ source('raw', 'biller_vends') }}
+    {% if is_incremental() %}
+    -- Only files loaded since the last run (a reload gets a new _loaded_at, so it's picked up too).
+    -- coalesce: if the table is still empty, max() is NULL and nothing would ever compare greater.
+    where _loaded_at > (select coalesce(max(_loaded_at), '-infinity') from {{ this }})
+    {% endif %}
 )
 
 select

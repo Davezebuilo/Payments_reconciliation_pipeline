@@ -1,7 +1,14 @@
 -- One row per payment attempt, typed and tidied. Money is in kobo (integers) from here on,
 -- so sums never pick up floating-point pennies.
+{{ config(indexes=[{'columns': ['merchant_ref']}, {'columns': ['business_date']}]) }}
+
 with source as (
     select * from {{ source('raw', 'ledger') }}
+    {% if is_incremental() %}
+    -- Only files loaded since the last run (a reload gets a new _loaded_at, so it's picked up too).
+    -- coalesce: if the table is still empty, max() is NULL and nothing would ever compare greater.
+    where _loaded_at > (select coalesce(max(_loaded_at), '-infinity') from {{ this }})
+    {% endif %}
 )
 
 select

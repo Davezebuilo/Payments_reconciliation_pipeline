@@ -52,4 +52,10 @@ grade:      ## score the pipeline against the ground truth
 airflow-logs:  ## follow Airflow's log
 	docker compose logs -f airflow
 
-.PHONY: up down reset logs psql data test load load-day dbt-debug build freshness docs grade airflow-logs
+replay:  ## prove incremental == full rebuild (empties and reloads the warehouse, ~12 min)
+	./scripts/replay.sh
+
+full-refresh:  ## rebuild every model from scratch (after changing a model's logic)
+	$(DBT) build --full-refresh
+
+.PHONY: up down reset logs psql data test load load-day dbt-debug build freshness docs grade airflow-logs replay full-refresh

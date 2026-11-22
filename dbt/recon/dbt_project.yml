@@ -8,16 +8,20 @@ test-paths: ["tests"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
+vars:
+  lookback_days: 7   # settlements arrive up to 5 days late; rebuild this many recent days each run
+
 models:
   recon:
+    staging:
+      +schema: staging          # → the "staging" schema (see macros/generate_schema_name.sql)
+      # Each run adds only the files loaded since the last run. A reloaded day replaces itself.
+      +materialized: incremental
+      +incremental_strategy: delete+insert
+      +unique_key: _file_date
     intermediate:
       +schema: intermediate
       +materialized: table      # matching is heavy: compute once per build, not on every query
-      
     marts:
       +schema: marts
       +materialized: table
-
-    staging:
-      +schema: staging          # → the "staging" schema (see macros/generate_schema_name.sql)
-      +materialized: view       # staging is a thin cleaning layer; views always show the latest raw data

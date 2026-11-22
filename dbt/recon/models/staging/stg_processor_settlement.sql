@@ -1,8 +1,15 @@
 -- One row per settlement line from the processor. Its file writes money as "1,500.00"
 -- and dates as dd/mm/yyyy; both are converted here. Duplicates and missing references
 -- are kept on purpose: finding them is the reconciliation's job, not staging's.
+{{ config(indexes=[{'columns': ['txn_date']}]) }}
+
 with source as (
     select * from {{ source('raw', 'processor_settlement') }}
+    {% if is_incremental() %}
+    -- Only files loaded since the last run (a reload gets a new _loaded_at, so it's picked up too).
+    -- coalesce: if the table is still empty, max() is NULL and nothing would ever compare greater.
+    where _loaded_at > (select coalesce(max(_loaded_at), '-infinity') from {{ this }})
+    {% endif %}
 )
 
 select
