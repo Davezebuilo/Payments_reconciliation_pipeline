@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: int_settlements_matched
+    description: Every settlement row, with the ledger transaction it pays for and how it was matched.
+    columns:
+      - name: processor_ref
+        data_tests: [unique, not_null]
+      - name: match_method
+        description: reference (carried our ref), inferred (matched on date, amount and fee), or unmatched.
+        data_tests:
+          - accepted_values:
+              arguments: {values: [reference, inferred, unmatched]}

@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: fct_reconciliation
+    description: One row per transaction reference, with a single reconciliation verdict.
+    columns:
+      - name: merchant_ref
+        data_tests: [unique, not_null]
+      - name: business_date
+        data_tests: [not_null]
+      - name: recon_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - matched
+                  - not_applicable
+                  - needs_review
+                  - missing_settlement
+                  - duplicate_settlement
+                  - amount_mismatch
+                  - fee_mismatch
+                  - missing_reference
+                  - late_settlement
+                  - missing_vend
+                  - duplicate_vend
+                  - vend_failed
+                  - wrong_biller
+                  - status_mismatch
+                  - orphan_vend
+
+  - name: agg_daily_reconciliation
+    description: Transactions and value per day, biller and status.
+    columns:
+      - name: business_date
+        data_tests: [not_null]
+      - name: recon_status
+        data_tests: [not_null]

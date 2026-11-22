@@ -10,6 +10,14 @@ clean-targets: ["target", "dbt_packages"]
 
 models:
   recon:
+    intermediate:
+      +schema: intermediate
+      +materialized: table      # matching is heavy: compute once per build, not on every query
+      
+    marts:
+      +schema: marts
+      +materialized: table
+
     staging:
       +schema: staging          # → the "staging" schema (see macros/generate_schema_name.sql)
       +materialized: view       # staging is a thin cleaning layer; views always show the latest raw data

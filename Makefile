@@ -46,4 +46,7 @@ docs:       ## browse the models and lineage at http://localhost:8080
 	$(DBT) docs generate
 	$(DBT) docs serve --port 8080
 
-.PHONY: up down reset logs psql data test load load-day dbt-debug build freshness docs
+grade:      ## score the pipeline against the ground truth
+	.venv/bin/python -m grader.grade
+
+.PHONY: up down reset logs psql data test load load-day dbt-debug build freshness docs grade
