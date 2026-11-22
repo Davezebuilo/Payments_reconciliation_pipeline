@@ -35,5 +35,20 @@ services:
     depends_on:
       warehouse:
         condition: service_healthy
+
+  superset:
+    build:
+      context: .
+      dockerfile: superset/Dockerfile
+    container_name: recon-superset
+    env_file: .env
+    ports:
+      - "8088:8088"
+    volumes:
+      - superset-home:/app/superset_home   # dashboards and charts live here: keep them across restarts
+    depends_on:
+      warehouse:
+        condition: service_healthy
 volumes:
-  warehouse-data:
+    warehouse-data:
+    superset-home:

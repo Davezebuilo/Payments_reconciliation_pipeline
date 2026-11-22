@@ -37,3 +37,8 @@ models:
         data_tests: [not_null]
       - name: recon_status
         data_tests: [not_null]
+      - name: issue_group
+        description: matched, not_applicable, needs_review, money, fulfilment or timing.
+        data_tests:
+          - accepted_values:
+              arguments: {values: [matched, not_applicable, needs_review, money, fulfilment, timing]}
