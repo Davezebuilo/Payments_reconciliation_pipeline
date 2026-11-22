@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    # A throwaway Postgres for this run only.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: recon
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: recon
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U recon"
+          --health-interval 5s
+          --health-retries 10
+
+    # The loader, tests, dbt and grader all read these instead of .env.
+    env:
+      POSTGRES_USER: recon
+      POSTGRES_PASSWORD: ci
+      POSTGRES_DB: recon
+      WAREHOUSE_HOST: localhost
+      WAREHOUSE_PORT: "5432"
+      DBT_PROFILES_DIR: .
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Generate a small dataset
+        # Same generator and error rates, 5,000 payments a day instead of 50,000, so CI stays fast.
+        run: |
+          python -c "import yaml; c = yaml.safe_load(open('generator/config.yaml')); c['transactions_per_day'] = 2000; yaml.safe_dump(c, open('ci-config.yaml', 'w'))"
+          python -m generator.generate --start 2026-10-01 --days 7 --config ci-config.yaml
+
+      - name: Unit and integration tests
+        run: python -m pytest -q
+
+      - name: Load
+        run: python -m loader.load --all
+
+      - name: dbt build (models and data tests)
+        working-directory: dbt/recon
+        run: dbt build
+
+      - name: Grade against the ground truth
+        run: python -m grader.grade
