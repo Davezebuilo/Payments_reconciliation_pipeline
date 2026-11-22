@@ -13,5 +13,27 @@ services:
       interval: 5s
       retries: 10
 
+  airflow:
+    build:
+      context: .
+      dockerfile: airflow/Dockerfile
+    container_name: recon-airflow
+    command: standalone
+    env_file: .env
+    environment:
+      WAREHOUSE_HOST: warehouse        # containers reach each other by service name...
+      WAREHOUSE_PORT: "5432"           # ...on the container's own port, not your Mac's 5433
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"   # local only: no login screen
+      DBT_TARGET_PATH: /tmp/dbt-target  # keep the container's dbt files apart from your Mac's
+      DBT_LOG_PATH: /tmp/dbt-logs
+    ports:
+      - "8081:8080"                    # 8080 is taken by `make docs`
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - .:/opt/recon
+    depends_on:
+      warehouse:
+        condition: service_healthy
 volumes:
   warehouse-data:

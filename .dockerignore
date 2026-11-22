@@ -1,0 +1,5 @@
+.venv
+data
+dbt/recon/target
+dbt/recon/logs
+.git

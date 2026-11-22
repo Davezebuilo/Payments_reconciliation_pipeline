@@ -49,4 +49,7 @@ docs:       ## browse the models and lineage at http://localhost:8080
 grade:      ## score the pipeline against the ground truth
 	.venv/bin/python -m grader.grade
 
-.PHONY: up down reset logs psql data test load load-day dbt-debug build freshness docs grade
+airflow-logs:  ## follow Airflow's log
+	docker compose logs -f airflow
+
+.PHONY: up down reset logs psql data test load load-day dbt-debug build freshness docs grade airflow-logs
